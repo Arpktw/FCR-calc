@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>土雞 FCR / 日採食量即時計算器</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+body{font-family:system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+     margin:0;padding:2rem;background:#f7f9fb;color:#333;}
+h1{margin-top:0;font-size:1.7rem;text-align:center;}
+fieldset{border:1px solid #ccc;padding:1rem;margin-bottom:1.5rem;border-radius:.5rem;background:#fff;}
+label{display:flex;justify-content:space-between;align-items:center;
+      margin:.4rem 0;font-size:.95rem;}
+input{flex:0 0 45%;padding:.3rem;border:1px solid #aaa;border-radius:4px;}
+button{display:block;width:100%;padding:.6rem;font-size:1rem;
+       background:#1976d2;color:#fff;border:none;border-radius:4px;cursor:pointer;}
+button:hover{background:#125aa3;}
+small{color:#888;font-size:.8rem;}
+footer{margin-top:2rem;text-align:center;font-size:.8rem;color:#777;}
+</style>
+</head>
+<body>
+
+<h1>FCR／平均採食量計算器</h1>
+
+<fieldset>
+ <legend>輸入已知值（留空代表未知）</legend>
+
+ <label>飼養天數 D (天)：<input id="D" type="number" step="0.1" placeholder="例如 90"></label>
+ <label>總飼料量 F (kg)：<input id="F" type="number" step="0.1" placeholder="例如 320"></label>
+ <label>毛雞總重 W (kg)：<input id="W" type="number" step="0.1" placeholder="例如 100"></label>
+ <label>平均採食量 FI<sub>avg</sub> (kg/天)：<input id="FI" type="number" step="0.001"></label>
+ <label>FCR：<input id="FCR" type="number" step="0.001"></label>
+</fieldset>
+
+<button onclick="calc()">計算 / 自動補欄</button>
+
+<fieldset>
+ <legend>結果</legend>
+ <p id="msg"><small>請至少填入兩個以上欄位再按「計算」</small></p>
+</fieldset>
+
+<footer>© 2025 土雞 FCR Calculator</footer>
+
+<script>
+function g(id){return document.getElementById(id)}
+function v(id){return parseFloat(g(id).value)}
+function s(id,val){ if(!g(id).value && val!=null && !Number.isNaN(val)) g(id).value = val.toFixed(3) }
+
+function calc(){
+  let D=v('D'), F=v('F'), W=v('W'),
+      FI=v('FI'), fcr=v('FCR');
+  let filled = [D,F,W,FI,fcr].filter(x=>!isNaN(x)).length;
+  if(filled<2){g('msg').innerHTML='<small style="color:#c00">至少輸入兩項數值</small>';return;}
+
+  // ① 有 F、fcr 可求 W；有 W、fcr 可求 F
+  if(isNaN(W) && !isNaN(F) && !isNaN(fcr)) W = F / fcr;
+  if(isNaN(F) && !isNaN(W) && !isNaN(fcr)) F = W * fcr;
+
+  // ② 有 D、FI 可求 F；有 F、FI 可求 D
+  if(isNaN(F) && !isNaN(D) && !isNaN(FI)) F = FI * D;
+  if(isNaN(D) && !isNaN(F) && !isNaN(FI)) D = F / FI;
+
+  // ③ 有 F、D 可求 FI；有 F、W 可求 fcr
+  if(!isNaN(F) && !isNaN(D) && isNaN(FI)) FI = F / D;
+  if(!isNaN(F) && !isNaN(W) && isNaN(fcr)) fcr = F / W;
+
+  // 回填（原來空的欄位）
+  s('D',D); s('F',F); s('W',W); s('FI',FI); s('FCR',fcr);
+
+  g('msg').innerHTML = '<b>計算完成！</b>';
+}
+</script>
+
+</body>
+</html>
